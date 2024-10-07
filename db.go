@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -24,42 +25,23 @@ func (s *SQLiteDB) Init() error {
 }
 
 func (s *SQLiteDB) AddUser(u *User) error {
-	stmt := "INSERT INTO users(id,first_name,last_name,email,password,created_at) VALUES(?,?,?,?,?,?)"
-
-	_, err := s.db.Exec(stmt, u.ID, u.FirstName, u.LastName, u.Email, u.Password, u.CreatedAt)
-
+	stmt := "INSERT INTO users(id,first_name,last_name,email,username,password,created_at) VALUES(?,?,?,?,?,?,?);"
+	_, err := s.db.Exec(stmt, u.ID, u.FirstName, u.LastName, u.Email, u.UserName, u.Password, u.CreatedAt)
 	return err
 }
 
-func (s *SQLiteDB) GetUserByEmail(email string) (*User, error) {
-	stmt := "SELECT * FROM users WHERE email=?"
-	row := s.db.QueryRow(stmt, email)
-
-	user := new(User)
-	err := row.Scan(
-		&user.ID,
-		&user.FirstName,
-		&user.LastName,
-		&user.Email,
-		&user.Password,
-		&user.CreatedAt,
-	)
+func (s *SQLiteDB) GetUserBy(key, value string) (*User, error) {
+	stmt := fmt.Sprintf("SELECT * FROM users WHERE %s=?;", key)
+	row := s.db.QueryRow(stmt, value)
+	u := new(User)
+	err := row.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Email, &u.UserName, &u.Password, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
-
-	return user, nil
+	return u, nil
 }
 
 func (s *SQLiteDB) createUserTable() error {
-	query := `CREATE TABLE IF NOT EXISTS users(
-	id VARCHAR PRIMARY KEY,
-	first_name VARCHAR(50),
-	last_name VARCHAR(50),
-	email VARCHAR(50),
-	password VARCHAR(50),
-	created_at TIMESTAMP)`
-	_, err := s.db.Exec(query)
-
+	_, err := s.db.Exec(CreateUserTableQuery)
 	return err
 }
