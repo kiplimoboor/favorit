@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"errors"
@@ -26,18 +26,18 @@ type UserRequest struct {
 	Password  string `json:"password,omitempty"`
 }
 
+type UpdateUserRequest struct {
+	Email    string `json:"email"`
+	Field    string `json:"field"`
+	NewValue string `json:"newVal"`
+}
+
 type GetUserResponse struct {
 	FirstName string    `json:"firstName"`
 	LastName  string    `json:"lastName"`
 	UserName  string    `json:"username"`
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"createdAt"`
-}
-
-type UpdateUser struct {
-	Email    string `json:"email"`
-	Field    string `json:"field"`
-	NewValue string `json:"newVal"`
 }
 
 const CreateUserTableQuery string = `
@@ -63,7 +63,7 @@ func CreateNewUser(u UserRequest) (*User, error) {
 		LastName:  u.LastName,
 		Email:     u.Email,
 		UserName:  u.UserName,
-		Password:  HashPassword(u.Password),
+		Password:  hashPassword(u.Password),
 		CreatedAt: time.Now().UTC(),
 	}
 	return &user, nil
@@ -85,12 +85,12 @@ func ValidateUserCreateRequest(u UserRequest) error {
 	return nil
 }
 
-func HashPassword(password string) string {
+func hashPassword(password string) string {
 	bytes, _ := bcrypt.GenerateFromPassword([]byte(password), 4)
 	return string(bytes)
 }
 
-func CheckPasswordHash(password, hash string) bool {
+func checkPasswordHash(password, hash string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }

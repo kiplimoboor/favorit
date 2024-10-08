@@ -1,44 +1,21 @@
-package main
+package database
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
-
-	_ "github.com/mattn/go-sqlite3"
+	"github.com/kiplimoboor/favorit/api/database/models"
 )
 
-type SQLiteDB struct {
-	db       *sql.DB
-	notifier Notifier
-}
-
-func NewSQLiteDB(notifer Notifier) (*SQLiteDB, error) {
-	db, err := sql.Open("sqlite3", "favorit.db")
-	if err != nil {
-		return nil, err
-	}
-	return &SQLiteDB{db: db, notifier: notifer}, nil
-}
-
-func (sqlite *SQLiteDB) Init() error {
-	sqlite.db.Exec("DROP TABLE users")
-	return sqlite.createUserTable()
-}
-
-func (sqlite *SQLiteDB) AddUser(u User) error {
+func (sqlite *SQLiteDB) CreateUser(u models.User) error {
 	stmt := "INSERT INTO users(id,first_name,last_name,email,username,password,created_at) VALUES(?,?,?,?,?,?,?);"
 	_, err := sqlite.db.Exec(stmt, u.ID, u.FirstName, u.LastName, u.Email, u.UserName, u.Password, u.CreatedAt)
-	if err == nil {
-		sqlite.notifier.NotifyAccountCreated(u)
-	}
 	return err
 }
 
-func (sqlite *SQLiteDB) GetUserBy(key, value string) (*User, error) {
+func (sqlite *SQLiteDB) GetUserBy(key, value string) (*models.User, error) {
 	stmt := fmt.Sprintf("SELECT * FROM users WHERE %s=?;", key)
 	row := sqlite.db.QueryRow(stmt, value)
-	u := new(User)
+	u := new(models.User)
 	err := row.Scan(&u.ID, &u.FirstName, &u.LastName, &u.Email, &u.UserName, &u.Password, &u.CreatedAt)
 	if err != nil {
 		return nil, err
@@ -46,7 +23,7 @@ func (sqlite *SQLiteDB) GetUserBy(key, value string) (*User, error) {
 	return u, nil
 }
 
-// This function only updates via email
+// Only updates based on email
 func (sqlite *SQLiteDB) UpdateUser(email, field, newValue string) error {
 	_, err := sqlite.GetUserBy("email", email)
 	if err != nil {
@@ -57,6 +34,7 @@ func (sqlite *SQLiteDB) UpdateUser(email, field, newValue string) error {
 	return err
 }
 
+// Only deletes based on email
 func (sqlite *SQLiteDB) DeleteUser(email string) error {
 	_, err := sqlite.GetUserBy("email", email)
 	if err != nil {
@@ -65,10 +43,5 @@ func (sqlite *SQLiteDB) DeleteUser(email string) error {
 
 	stmt := "DELETE FROM users WHERE email=?;"
 	_, err = sqlite.db.Exec(stmt, email)
-	return err
-}
-
-func (sqlite *SQLiteDB) createUserTable() error {
-	_, err := sqlite.db.Exec(CreateUserTableQuery)
 	return err
 }
