@@ -18,12 +18,26 @@ type User struct {
 	CreatedAt time.Time
 }
 
-type CreateUserRequest struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	UserName  string `json:"username"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
+type UserRequest struct {
+	FirstName string `json:"firstName,omitempty"`
+	LastName  string `json:"lastName,omitempty"`
+	UserName  string `json:"username,omitempty"`
+	Email     string `json:"email,omitempty"`
+	Password  string `json:"password,omitempty"`
+}
+
+type GetUserResponse struct {
+	FirstName string    `json:"firstName"`
+	LastName  string    `json:"lastName"`
+	UserName  string    `json:"username"`
+	Email     string    `json:"email"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type UpdateUser struct {
+	Email    string `json:"email"`
+	Field    string `json:"field"`
+	NewValue string `json:"newVal"`
 }
 
 const CreateUserTableQuery string = `
@@ -38,7 +52,7 @@ CREATE TABLE IF NOT EXISTS users
     created_at TIMESTAMP
 )`
 
-func CreateNewUser(u CreateUserRequest) (*User, error) {
+func CreateNewUser(u UserRequest) (*User, error) {
 	err := ValidateUserCreateRequest(u)
 	if err != nil {
 		return nil, err
@@ -55,7 +69,7 @@ func CreateNewUser(u CreateUserRequest) (*User, error) {
 	return &user, nil
 }
 
-func ValidateUserCreateRequest(u CreateUserRequest) error {
+func ValidateUserCreateRequest(u UserRequest) error {
 	if u.FirstName == "" {
 		return errors.New("check firstName field")
 	}
