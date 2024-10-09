@@ -8,6 +8,15 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type Database interface {
+	Init() error
+
+	CreateUser(models.User) error
+	GetUserBy(key, value string) (*models.User, error)
+	UpdateUser(email, field, newValue string) error
+	DeleteUser(email string) error
+}
+
 type SQLiteDB struct {
 	db *sql.DB
 }

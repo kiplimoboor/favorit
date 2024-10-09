@@ -9,10 +9,10 @@ import (
 
 type Server struct {
 	listenAddr string
-	db         *database.SQLiteDB
+	db         database.Database
 }
 
-func NewServer(listenAddr string, db *database.SQLiteDB) *Server {
+func NewServer(listenAddr string, db database.Database) *Server {
 	return &Server{listenAddr: listenAddr, db: db}
 }
 

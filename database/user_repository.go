@@ -40,7 +40,6 @@ func (db *SQLiteDB) DeleteUser(email string) error {
 	if err != nil {
 		return errors.New(fmt.Sprintf("user with email %s does not exist", email))
 	}
-
 	stmt := "DELETE FROM users WHERE email=?;"
 	_, err = db.db.Exec(stmt, email)
 	return err

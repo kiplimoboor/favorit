@@ -12,10 +12,10 @@ import (
 )
 
 type UserController struct {
-	db *database.SQLiteDB
+	db database.Database
 }
 
-func NewUserController(db *database.SQLiteDB) *UserController {
+func NewUserController(db database.Database) *UserController {
 	return &UserController{db: db}
 }
 

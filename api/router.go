@@ -8,7 +8,7 @@ import (
 	"github.com/kiplimoboor/favorit/database"
 )
 
-func NewRouter(db *database.SQLiteDB) *mux.Router {
+func NewRouter(db database.Database) *mux.Router {
 
 	userCtrl := controllers.NewUserController(db)
 
