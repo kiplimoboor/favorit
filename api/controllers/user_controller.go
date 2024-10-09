@@ -6,10 +6,19 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/kiplimoboor/favorit/api/database/models"
+	"github.com/kiplimoboor/favorit/database"
+	"github.com/kiplimoboor/favorit/database/models"
 )
 
-func (c *Controller) HandleCreateUser(w http.ResponseWriter, r *http.Request) error {
+type UserController struct {
+	userRepo *database.UserRepository
+}
+
+func NewUserController(ur *database.UserRepository) *UserController {
+	return &UserController{userRepo: ur}
+}
+
+func (uc *UserController) HandleCreateUser(w http.ResponseWriter, r *http.Request) error {
 	newUserReq := models.UserRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&newUserReq); err != nil {
 		return WriteJSON(w, http.StatusBadRequest, Error{Error: err.Error()})
@@ -22,7 +31,7 @@ func (c *Controller) HandleCreateUser(w http.ResponseWriter, r *http.Request) er
 	if err = validateUser(newUser); err != nil {
 		return WriteJSON(w, http.StatusBadRequest, Error{Error: err.Error()})
 	}
-	if err = c.db.CreateUser(*newUser); err != nil {
+	if err = uc.userRepo.CreateUser(*newUser); err != nil {
 		return WriteJSON(w, http.StatusBadRequest, Error{Error: err.Error()})
 	}
 	successMsg := fmt.Sprintf("user %s successfully created", newUser.UserName)

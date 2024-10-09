@@ -1,1 +1,1 @@
-## Hotel Favorit Hotel Management System
+## Hotel Favorit Reservation System

@@ -5,12 +5,18 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/kiplimoboor/favorit/api/controllers"
+	"github.com/kiplimoboor/favorit/database"
 )
 
-func NewRouter(c controllers.Controller) *mux.Router {
+func NewRouter(db *database.SQLiteDB) *mux.Router {
+
+	userRepo := database.NewUserRepository(db)
+	userController := controllers.NewUserController(userRepo)
+
 	router := mux.NewRouter()
 
-	router.HandleFunc("/users", makeHandlerFunc(c.HandleCreateUser)).Methods("POST")
+	router.HandleFunc("/users", makeHandlerFunc(userController.HandleCreateUser)).Methods("POST")
+
 	return router
 }
 
