@@ -2,6 +2,7 @@ package database
 
 import (
 	"database/sql"
+	"os"
 
 	"github.com/kiplimoboor/favorit/database/models"
 	_ "github.com/mattn/go-sqlite3"
@@ -20,6 +21,7 @@ func NewSQLiteDB() (*SQLiteDB, error) {
 }
 
 func (db *SQLiteDB) Init() error {
+	os.Remove("database/favorit.db")
 	tableQueries := []string{models.CreateUserTableQuery}
 
 	for _, v := range tableQueries {

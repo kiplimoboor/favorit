@@ -17,7 +17,7 @@ type User struct {
 	CreatedAt time.Time
 }
 
-type UserRequest struct {
+type CreateUserRequest struct {
 	FirstName string `json:"firstName,omitempty"`
 	LastName  string `json:"lastName,omitempty"`
 	UserName  string `json:"username,omitempty"`
@@ -33,13 +33,13 @@ type GetUserResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type UpdateUser struct {
+type UpdateUserRequest struct {
 	Email    string `json:"email"`
 	Field    string `json:"field"`
 	NewValue string `json:"newVal"`
 }
 
-func CreateNewUser(u UserRequest) (*User, error) {
+func CreateNewUser(u CreateUserRequest) (*User, error) {
 	user := User{
 		ID:        uuid.New().String(),
 		FirstName: u.FirstName,

@@ -10,12 +10,14 @@ import (
 
 func NewRouter(db *database.SQLiteDB) *mux.Router {
 
-	userRepo := database.NewUserRepository(db)
-	userController := controllers.NewUserController(userRepo)
+	userCtrl := controllers.NewUserController(db)
 
 	router := mux.NewRouter()
 
-	router.HandleFunc("/users", makeHandlerFunc(userController.HandleCreateUser)).Methods("POST")
+	router.HandleFunc("/users", makeHandlerFunc(userCtrl.HandleCreateUser)).Methods("POST")
+	router.HandleFunc("/users", makeHandlerFunc(userCtrl.HandleUpdateUser)).Methods("PATCH")
+	router.HandleFunc("/users/{username}", makeHandlerFunc(userCtrl.HandleGetUser)).Methods("GET")
+	router.HandleFunc("/users/", makeHandlerFunc(userCtrl.HandleDeleteUser)).Methods("DELETE")
 
 	return router
 }
