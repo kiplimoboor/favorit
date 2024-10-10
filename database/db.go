@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"os"
 
-	"github.com/kiplimoboor/favorit/database/models"
+	"github.com/kiplimoboor/favorit/models"
 	_ "github.com/mattn/go-sqlite3"
 )
 

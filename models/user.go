@@ -3,12 +3,11 @@ package models
 import (
 	"time"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID        string
+	ID        int
 	FirstName string
 	LastName  string
 	UserName  string
@@ -34,14 +33,12 @@ type GetUserResponse struct {
 }
 
 type UpdateUserRequest struct {
-	Email    string `json:"email"`
 	Field    string `json:"field"`
 	NewValue string `json:"newVal"`
 }
 
-func CreateNewUser(u CreateUserRequest) (*User, error) {
+func CreateNewUser(u CreateUserRequest) *User {
 	user := User{
-		ID:        uuid.New().String(),
 		FirstName: u.FirstName,
 		LastName:  u.LastName,
 		Email:     u.Email,
@@ -49,7 +46,7 @@ func CreateNewUser(u CreateUserRequest) (*User, error) {
 		Password:  hashPassword(u.Password),
 		CreatedAt: time.Now().UTC(),
 	}
-	return &user, nil
+	return &user
 }
 
 func hashPassword(password string) string {
@@ -60,7 +57,7 @@ func hashPassword(password string) string {
 const CreateUserTableQuery string = `
 CREATE TABLE IF NOT EXISTS users
 (
-    id VARCHAR PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     first_name VARCHAR(50),
     last_name VARCHAR(50),
     username VARCHAR(50) UNIQUE,

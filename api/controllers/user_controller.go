@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/kiplimoboor/favorit/database"
-	"github.com/kiplimoboor/favorit/database/models"
+	"github.com/kiplimoboor/favorit/models"
 )
 
 type UserController struct {
@@ -22,20 +23,14 @@ func NewUserController(db database.Database) *UserController {
 func (ctrl *UserController) HandleCreateUser(w http.ResponseWriter, r *http.Request) error {
 	newUserReq := models.CreateUserRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&newUserReq); err != nil {
-		return WriteJSON(w, http.StatusBadRequest, Error{Error: err.Error()})
+		return err
 	}
-
-	newUser, err := models.CreateNewUser(newUserReq)
-	if err != nil {
-		return WriteJSON(w, http.StatusBadRequest, Error{Error: err.Error()})
+	newUser := models.CreateNewUser(newUserReq)
+	if err := validateUser(newUser); err != nil {
+		return err
 	}
-
-	if err = validateUser(newUser); err != nil {
-		return WriteJSON(w, http.StatusBadRequest, Error{Error: err.Error()})
-	}
-
-	if err = ctrl.db.CreateUser(*newUser); err != nil {
-		return WriteJSON(w, http.StatusBadRequest, Error{Error: err.Error()})
+	if err := ctrl.db.CreateUser(*newUser); err != nil {
+		return err
 	}
 	successMsg := fmt.Sprintf("user %s successfully created", newUser.UserName)
 	return WriteJSON(w, http.StatusCreated, Success{Message: successMsg})
@@ -46,7 +41,7 @@ func (ctrl *UserController) HandleGetUser(w http.ResponseWriter, r *http.Request
 	username := mux.Vars(r)["username"]
 	user, err := ctrl.db.GetUserBy("username", username)
 	if err != nil {
-		return WriteJSON(w, http.StatusNotFound, Error{Error: "user not found"})
+		return WriteJSON(w, http.StatusNotFound, Error{Error: fmt.Sprintf("user %s not found", username)})
 	}
 	userRes := models.GetUserResponse{
 		FirstName: user.FirstName,
@@ -59,23 +54,30 @@ func (ctrl *UserController) HandleGetUser(w http.ResponseWriter, r *http.Request
 }
 
 func (ctrl *UserController) HandleUpdateUser(w http.ResponseWriter, r *http.Request) error {
+
+	username := mux.Vars(r)["username"]
 	updateRequest := models.UpdateUserRequest{}
 	json.NewDecoder(r.Body).Decode(&updateRequest)
-	err := ctrl.db.UpdateUser(updateRequest.Email, updateRequest.Field, updateRequest.NewValue)
+	err := ctrl.db.UpdateUser(username, updateRequest.Field, updateRequest.NewValue)
 	if err != nil {
-		return WriteJSON(w, http.StatusBadRequest, Error{Error: err.Error()})
+		if err == sql.ErrNoRows {
+			return WriteJSON(w, http.StatusNotFound, Error{Error: fmt.Sprintf("user %s not found", username)})
+		}
+		return err
 	}
-	successMsg := fmt.Sprintf("user %s updated successfully", updateRequest.Email)
-	return WriteJSON(w, http.StatusOK, Success{Message: successMsg})
+	return WriteJSON(w, http.StatusOK, Success{Message: fmt.Sprintf("user %s updated successfully", username)})
 }
 
 func (ctrl *UserController) HandleDeleteUser(w http.ResponseWriter, r *http.Request) error {
-	email := r.URL.Query().Get("email")
-	err := ctrl.db.DeleteUser(email)
+	username := mux.Vars(r)["username"]
+	err := ctrl.db.DeleteUser(username)
 	if err != nil {
-		return WriteJSON(w, http.StatusBadRequest, Error{Error: err.Error()})
+		if err == sql.ErrNoRows {
+			return WriteJSON(w, http.StatusNotFound, Error{Error: fmt.Sprintf("user %s not found", username)})
+		}
+		return err
 	}
-	return WriteJSON(w, http.StatusOK, Success{Message: fmt.Sprintf("user %s deleted", email)})
+	return WriteJSON(w, http.StatusOK, Success{Message: fmt.Sprintf("user %s deleted", username)})
 }
 
 func validateUser(user *models.User) error {

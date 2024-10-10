@@ -1,14 +1,26 @@
 package database
 
 import (
-	"errors"
 	"fmt"
-	"github.com/kiplimoboor/favorit/database/models"
+
+	"github.com/kiplimoboor/favorit/models"
 )
 
 func (db *SQLiteDB) CreateUser(u models.User) error {
-	stmt := "INSERT INTO users(id,first_name,last_name,email,username,password,created_at) VALUES(?,?,?,?,?,?,?);"
-	_, err := db.db.Exec(stmt, u.ID, u.FirstName, u.LastName, u.Email, u.UserName, u.Password, u.CreatedAt)
+	userExistStmt := "SELECT username, email FROM users where username=? OR email=?"
+	row := db.db.QueryRow(userExistStmt, u.UserName, u.Email)
+	var existingUsername, existingEmail string
+	row.Scan(&existingUsername, &existingEmail)
+
+	if existingUsername == u.UserName {
+		return fmt.Errorf("username %s is already in use", existingUsername)
+	}
+	if existingEmail == u.Email {
+		return fmt.Errorf("email %s is already in use", existingEmail)
+	}
+
+	stmt := "INSERT INTO users(first_name,last_name,email,username,password,created_at) VALUES(?,?,?,?,?,?);"
+	_, err := db.db.Exec(stmt, u.FirstName, u.LastName, u.Email, u.UserName, u.Password, u.CreatedAt)
 	return err
 }
 
@@ -23,24 +35,20 @@ func (db *SQLiteDB) GetUserBy(key, value string) (*models.User, error) {
 	return u, nil
 }
 
-// Only updates based on email
-func (db *SQLiteDB) UpdateUser(email, field, newValue string) error {
-	_, err := db.GetUserBy("email", email)
-	if err != nil {
-		return errors.New(fmt.Sprintf("user with email %s does not exist", email))
+func (db *SQLiteDB) UpdateUser(username, field, newValue string) error {
+	if _, err := db.GetUserBy("username", username); err != nil {
+		return err
 	}
-	stmt := fmt.Sprintf("UPDATE users SET %s=? WHERE email=?;", field)
-	_, err = db.db.Exec(stmt, newValue, email)
+	stmt := fmt.Sprintf("UPDATE users SET %s=? WHERE username=?;", field)
+	_, err := db.db.Exec(stmt, newValue, username)
 	return err
 }
 
-// Only deletes based on email
-func (db *SQLiteDB) DeleteUser(email string) error {
-	_, err := db.GetUserBy("email", email)
-	if err != nil {
-		return errors.New(fmt.Sprintf("user with email %s does not exist", email))
+func (db *SQLiteDB) DeleteUser(username string) error {
+	if _, err := db.GetUserBy("username", username); err != nil {
+		return err
 	}
-	stmt := "DELETE FROM users WHERE email=?;"
-	_, err = db.db.Exec(stmt, email)
+	stmt := "DELETE FROM users WHERE username=?;"
+	_, err := db.db.Exec(stmt, username)
 	return err
 }
