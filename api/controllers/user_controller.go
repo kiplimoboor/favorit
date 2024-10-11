@@ -54,10 +54,11 @@ func (ctrl *UserController) HandleGetUser(w http.ResponseWriter, r *http.Request
 }
 
 func (ctrl *UserController) HandleUpdateUser(w http.ResponseWriter, r *http.Request) error {
-
 	username := mux.Vars(r)["username"]
-	updateRequest := models.UpdateUserRequest{}
-	json.NewDecoder(r.Body).Decode(&updateRequest)
+	updateRequest := models.UpdateRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&updateRequest); err != nil {
+		return err
+	}
 	err := ctrl.db.UpdateUser(username, updateRequest.Field, updateRequest.NewValue)
 	if err != nil {
 		if err == sql.ErrNoRows {

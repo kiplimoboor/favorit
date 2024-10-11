@@ -32,11 +32,6 @@ type GetUserResponse struct {
 	CreatedAt time.Time `json:"createdAt"`
 }
 
-type UpdateUserRequest struct {
-	Field    string `json:"field"`
-	NewValue string `json:"newVal"`
-}
-
 func CreateNewUser(u CreateUserRequest) *User {
 	user := User{
 		FirstName: u.FirstName,
