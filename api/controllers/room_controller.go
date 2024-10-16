@@ -20,16 +20,14 @@ func NewRoomController(db database.Database) *RoomController {
 }
 
 func (rc *RoomController) HandleCreateRoom(w http.ResponseWriter, r *http.Request) error {
-	roomReq := models.CreateRoomRequest{}
+	roomReq := models.RoomRequest{}
 	if err := json.NewDecoder(r.Body).Decode(&roomReq); err != nil {
 		return err
 	}
-	newRoom := models.NewRoom(roomReq)
-	if err := rc.db.CreateRoom(*newRoom); err != nil {
+	if err := rc.db.CreateRoom(roomReq); err != nil {
 		return err
 	}
-	successMsg := fmt.Sprintf("room %s created", newRoom.Number)
-	return WriteJSON(w, http.StatusOK, Success{Message: successMsg})
+	return WriteJSON(w, http.StatusOK, Success{Message: "room created"})
 }
 
 func (rc *RoomController) HandleGetRoom(w http.ResponseWriter, r *http.Request) error {
@@ -38,13 +36,7 @@ func (rc *RoomController) HandleGetRoom(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		return WriteJSON(w, http.StatusNotFound, Error{Error: fmt.Sprintf("room %s not found", number)})
 	}
-	res := models.GetRoomResponse{
-		Booked:      room.Booked,
-		Description: room.Description,
-		Number:      room.Number,
-		Size:        room.Size,
-	}
-	return WriteJSON(w, http.StatusOK, res)
+	return WriteJSON(w, http.StatusOK, room)
 }
 
 func (rc *RoomController) HandleUpdateRoom(w http.ResponseWriter, r *http.Request) error {

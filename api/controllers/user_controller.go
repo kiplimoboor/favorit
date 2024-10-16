@@ -21,18 +21,17 @@ func NewUserController(db database.Database) *UserController {
 }
 
 func (ctrl *UserController) HandleCreateUser(w http.ResponseWriter, r *http.Request) error {
-	newUserReq := models.CreateUserRequest{}
-	if err := json.NewDecoder(r.Body).Decode(&newUserReq); err != nil {
+	userReq := models.UserRequest{}
+	if err := json.NewDecoder(r.Body).Decode(&userReq); err != nil {
 		return err
 	}
-	newUser := models.CreateNewUser(newUserReq)
-	if err := validateUser(newUser); err != nil {
+	if err := validateUserReq(userReq); err != nil {
 		return err
 	}
-	if err := ctrl.db.CreateUser(*newUser); err != nil {
+	if err := ctrl.db.CreateUser(userReq); err != nil {
 		return err
 	}
-	successMsg := fmt.Sprintf("user %s successfully created", newUser.UserName)
+	successMsg := fmt.Sprintf("user %s successfully created", userReq.UserName)
 	return WriteJSON(w, http.StatusCreated, Success{Message: successMsg})
 }
 
@@ -41,16 +40,9 @@ func (ctrl *UserController) HandleGetUser(w http.ResponseWriter, r *http.Request
 	username := mux.Vars(r)["username"]
 	user, err := ctrl.db.GetUserBy("username", username)
 	if err != nil {
-		return WriteJSON(w, http.StatusNotFound, Error{Error: fmt.Sprintf("user %s not found", username)})
+		return WriteJSON(w, http.StatusNotFound, Error{Error: err.Error()})
 	}
-	userRes := models.GetUserResponse{
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-		UserName:  user.UserName,
-		CreatedAt: user.CreatedAt,
-	}
-	return WriteJSON(w, http.StatusOK, userRes)
+	return WriteJSON(w, http.StatusOK, user)
 }
 
 func (ctrl *UserController) HandleUpdateUser(w http.ResponseWriter, r *http.Request) error {
@@ -81,17 +73,17 @@ func (ctrl *UserController) HandleDeleteUser(w http.ResponseWriter, r *http.Requ
 	return WriteJSON(w, http.StatusOK, Success{Message: fmt.Sprintf("user %s deleted", username)})
 }
 
-func validateUser(user *models.User) error {
-	if user.FirstName == "" {
+func validateUserReq(ur models.UserRequest) error {
+	if ur.FirstName == "" {
 		return errors.New("first name is required")
 	}
-	if user.LastName == "" {
+	if ur.LastName == "" {
 		return errors.New("last name is required")
 	}
-	if user.Email == "" {
+	if ur.Email == "" {
 		return errors.New("email is required")
 	}
-	if user.Password == "" {
+	if ur.Password == "" {
 		return errors.New("password is required")
 	}
 	return nil

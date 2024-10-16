@@ -1,18 +1,20 @@
 package database
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/kiplimoboor/favorit/models"
 )
 
-func (db *SQLiteDB) CreateRoom(rm models.Room) error {
+func (db *SQLiteDB) CreateRoom(rq models.RoomRequest) error {
 	checkExists := "SELECT number FROM rooms WHERE number=?"
-	row := db.db.QueryRow(checkExists, rm.Number)
+	row := db.db.QueryRow(checkExists, rq.Number)
 	var result string
 	if err := row.Scan(&result); err == nil {
-		return fmt.Errorf("room %s already exists", rm.Number)
+		return fmt.Errorf("room %s already exists", rq.Number)
 	}
+	rm := models.NewRoom(rq)
 
 	stmt := "INSERT INTO rooms(number,size,description,booked,created_at) VALUES(?,?,?,?,?)"
 	_, err := db.db.Exec(stmt, rm.Number, rm.Size, rm.Description, rm.Booked, rm.CreatedAt)
@@ -25,7 +27,7 @@ func (db *SQLiteDB) GetRoomBy(key, value string) (*models.Room, error) {
 	row := db.db.QueryRow(stmt, value)
 	err := row.Scan(&rm.Id, &rm.Number, &rm.Size, &rm.Description, &rm.Booked, &rm.CreatedAt)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("room not found")
 	}
 	return rm, nil
 }

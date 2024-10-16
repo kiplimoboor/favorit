@@ -5,34 +5,46 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/kiplimoboor/favorit/api/controllers"
+	"github.com/kiplimoboor/favorit/auth"
 	"github.com/kiplimoboor/favorit/database"
 )
 
 func NewRouter(db database.Database) *mux.Router {
-
-	uc := controllers.NewUserController(db)
-	rc := controllers.NewRoomController(db)
-
 	router := mux.NewRouter()
 
+	// Login
+	lc := controllers.NewLoginController(db)
+	router.HandleFunc("/login", makeHandler(lc.HandleLogin)).Methods(http.MethodPost)
+
 	// Users
-	router.HandleFunc("/users", makeHandlerFunc(uc.HandleCreateUser)).Methods(http.MethodPost)
-	router.HandleFunc("/users/{username}", makeHandlerFunc(uc.HandleUpdateUser)).Methods(http.MethodPatch)
-	router.HandleFunc("/users/{username}", makeHandlerFunc(uc.HandleGetUser)).Methods(http.MethodGet)
-	router.HandleFunc("/users/{username}", makeHandlerFunc(uc.HandleDeleteUser)).Methods(http.MethodDelete)
+	uc := controllers.NewUserController(db)
+	router.HandleFunc("/users", auth.AuthAdmin(makeHandler(uc.HandleCreateUser))).Methods(http.MethodPost)
+	router.HandleFunc("/users/{username}", auth.AuthAdmin(makeHandler(uc.HandleUpdateUser))).Methods(http.MethodPatch)
+	router.HandleFunc("/users/{username}", makeHandler(uc.HandleGetUser)).Methods(http.MethodGet)
+	router.HandleFunc("/users/{username}", auth.AuthAdmin(makeHandler(uc.HandleDeleteUser))).Methods(http.MethodDelete)
 
 	// Rooms
-	router.HandleFunc("/rooms", makeHandlerFunc(rc.HandleCreateRoom)).Methods(http.MethodPost)
-	router.HandleFunc("/rooms/{number}", makeHandlerFunc(rc.HandleUpdateRoom)).Methods(http.MethodPatch)
-	router.HandleFunc("/rooms/{number}", makeHandlerFunc(rc.HandleGetRoom)).Methods(http.MethodGet)
-	router.HandleFunc("/rooms/{number}", makeHandlerFunc(rc.HandleDeleteRoom)).Methods(http.MethodDelete)
+	rc := controllers.NewRoomController(db)
+	router.HandleFunc("/rooms", auth.AuthAdmin(makeHandler(rc.HandleCreateRoom))).Methods(http.MethodPost)
+	router.HandleFunc("/rooms/{number}", auth.AuthAdmin(makeHandler(rc.HandleUpdateRoom))).Methods(http.MethodPatch)
+	router.HandleFunc("/rooms/{number}", makeHandler(rc.HandleGetRoom)).Methods(http.MethodGet)
+	router.HandleFunc("/rooms/{number}", auth.AuthAdmin(makeHandler(rc.HandleDeleteRoom))).Methods(http.MethodDelete)
+
+	// Guests
+	gc := controllers.NewGuestController(db)
+	router.HandleFunc("/guests", makeHandler(gc.HandleCreateGuest)).Methods(http.MethodPost)
+	router.HandleFunc("/guests/{email}", makeHandler(gc.HandleGetGuest)).Methods(http.MethodGet)
+
+	// Bookings
+	bc := controllers.NewBookingController(db)
+	router.HandleFunc("/bookings", makeHandler(bc.HandleCreateBooking)).Methods(http.MethodPost)
 
 	return router
 }
 
 type apiHandlerFunc func(http.ResponseWriter, *http.Request) error
 
-func makeHandlerFunc(f apiHandlerFunc) http.HandlerFunc {
+func makeHandler(f apiHandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := f(w, r)
 		if err != nil {
