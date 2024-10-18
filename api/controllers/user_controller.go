@@ -45,6 +45,14 @@ func (ctrl *UserController) HandleGetUser(w http.ResponseWriter, r *http.Request
 	return WriteJSON(w, http.StatusOK, user)
 }
 
+func (ctrl *UserController) HandleGetAllUsers(w http.ResponseWriter, r *http.Request) error {
+	users, err := ctrl.db.GetAllUsers()
+	if err != nil {
+		return err
+	}
+	return WriteJSON(w, http.StatusOK, users)
+}
+
 func (ctrl *UserController) HandleUpdateUser(w http.ResponseWriter, r *http.Request) error {
 	username := mux.Vars(r)["username"]
 	updateRequest := models.UpdateRequest{}

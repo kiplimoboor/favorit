@@ -3,12 +3,13 @@ package models
 import "time"
 
 type Booking struct {
-	Id         int
-	GuestEmail string
-	RoomNumber string
-	CheckIn    int64
-	CheckOut   int64
-	CreatedAt  int64
+	Id         int    `json:"id"`
+	GuestEmail string `json:"guestEmail"`
+	RoomNumber string `json:"roomNumber"`
+	CheckIn    int64  `json:"checkIn"`
+	CheckOut   int64  `json:"checkOut"`
+	Status     string `json:"status"`
+	CreatedAt  int64  `json:"createdAt"`
 }
 
 type BookingRequest struct {
@@ -24,10 +25,12 @@ func NewBooking(b BookingRequest) Booking {
 		RoomNumber: b.RoomNumber,
 		CheckIn:    b.CheckIn,
 		CheckOut:   b.CheckOut,
+		Status:     "occupied",
 		CreatedAt:  time.Now().Unix(),
 	}
 }
 
+// booking status is one of occupied, cancelled, checkout
 const BookingTableQuery string = `
 CREATE TABLE IF NOT EXISTS bookings
 (
@@ -36,6 +39,7 @@ CREATE TABLE IF NOT EXISTS bookings
     room_number VARCHAR(10) NOT NULL,
     checkin INTEGER,
     checkout INTEGER,
+	  status VARCHAR(15),
     created_at INTEGER,
 
     FOREIGN KEY(guest_email) REFERENCES guests(email),

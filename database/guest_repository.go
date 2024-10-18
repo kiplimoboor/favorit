@@ -35,6 +35,24 @@ func (db *SQLiteDB) GetGuestBy(key, value string) (*models.Guest, error) {
 	return g, nil
 }
 
+func (db *SQLiteDB) GetAllGuests() (*[]models.Guest, error) {
+	var guests []models.Guest
+	stmt := "SELECT * FROM guests"
+	rows, err := db.db.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		g := models.Guest{}
+		err := rows.Scan(&g.Id, &g.FirstName, &g.LastName, &g.Email, &g.Phone, &g.Address, &g.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		guests = append(guests, g)
+	}
+	return &guests, nil
+}
+
 func (db *SQLiteDB) UpdateGuest(email, field, newVal string) error {
 	if _, err := db.GetGuestBy("email", email); err != nil {
 		return err

@@ -32,6 +32,24 @@ func (db *SQLiteDB) GetRoomBy(key, value string) (*models.Room, error) {
 	return rm, nil
 }
 
+func (db *SQLiteDB) GetAllRooms() (*[]models.Room, error) {
+	var rooms []models.Room
+	stmt := "SELECT * FROM rooms;"
+	rows, err := db.db.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		rm := models.Room{}
+		err := rows.Scan(&rm.Id, &rm.Number, &rm.Size, &rm.Description, &rm.Booked, &rm.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		rooms = append(rooms, rm)
+	}
+	return &rooms, nil
+}
+
 func (db *SQLiteDB) UpdateRoom(number, field string, newValue any) error {
 	if _, err := db.GetRoomBy("number", number); err != nil {
 		return err

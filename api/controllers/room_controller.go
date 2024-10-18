@@ -39,6 +39,14 @@ func (rc *RoomController) HandleGetRoom(w http.ResponseWriter, r *http.Request) 
 	return WriteJSON(w, http.StatusOK, room)
 }
 
+func (bc *RoomController) HandleGetAllRooms(w http.ResponseWriter, r *http.Request) error {
+	rooms, err := bc.db.GetAllRooms()
+	if err != nil {
+		return err
+	}
+	return WriteJSON(w, http.StatusOK, rooms)
+}
+
 func (rc *RoomController) HandleUpdateRoom(w http.ResponseWriter, r *http.Request) error {
 	number := mux.Vars(r)["number"]
 	updateRequest := models.UpdateRequest{}

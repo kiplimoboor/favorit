@@ -44,6 +44,7 @@ func hashPassword(password string) string {
 	return string(bytes)
 }
 
+// role is either recep or admin
 const UserTableQuery string = `
 CREATE TABLE IF NOT EXISTS users
 (

@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -25,6 +26,23 @@ func AuthAdmin(next http.HandlerFunc) http.HandlerFunc {
 		}
 		next.ServeHTTP(w, r)
 	}
+}
+
+func AuthRecep(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		claims, err := CheckJWT(r)
+		if err != nil || claims.Role != "recep" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+
+func CreateJWT(claims Claims) (string, error) {
+	claims.ExpiresAt = jwt.NewNumericDate(time.Now().Add(time.Hour * 24))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString(SECRET_KEY)
 }
 
 func CheckJWT(r *http.Request) (*Claims, error) {

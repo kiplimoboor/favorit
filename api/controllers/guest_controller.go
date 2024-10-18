@@ -37,3 +37,11 @@ func (gc *GuestController) HandleGetGuest(w http.ResponseWriter, r *http.Request
 	}
 	return WriteJSON(w, http.StatusOK, guest)
 }
+
+func (bc *GuestController) HandleGetAllGuests(w http.ResponseWriter, r *http.Request) error {
+	guests, err := bc.db.GetAllGuests()
+	if err != nil {
+		return err
+	}
+	return WriteJSON(w, http.StatusOK, guests)
+}

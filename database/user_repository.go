@@ -34,6 +34,24 @@ func (db *SQLiteDB) GetUserBy(key, value string) (*models.User, error) {
 	return u, nil
 }
 
+func (db *SQLiteDB) GetAllUsers() (*[]models.User, error) {
+	var users []models.User
+	stmt := "SELECT * FROM users;"
+	rows, err := db.db.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		u := models.User{}
+		err := rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.UserName, &u.Email, &u.Role, &u.Password, &u.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+	return &users, nil
+}
+
 func (db *SQLiteDB) UpdateUser(username, field, newValue string) error {
 	if _, err := db.GetUserBy("username", username); err != nil {
 		return err

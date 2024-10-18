@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/kiplimoboor/favorit/auth"
 	"github.com/kiplimoboor/favorit/database"
 )
@@ -33,13 +32,18 @@ func (lc *LoginController) HandleLogin(w http.ResponseWriter, r *http.Request) e
 		return WriteJSON(w, http.StatusUnauthorized, Error{Error: "unauthorized"})
 	}
 	claims := auth.Claims{Email: user.Email, Role: user.Role}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenStr, err := token.SignedString(auth.SECRET_KEY)
+	tokenStr, err := auth.CreateJWT(claims)
 	if err != nil {
 		fmt.Println(err)
 		return WriteJSON(w, http.StatusInternalServerError, Error{Error: "internal server error"})
 	}
-
 	http.SetCookie(w, &http.Cookie{Name: "token", Value: tokenStr})
 	return WriteJSON(w, http.StatusOK, Success{Message: "login successful"})
+}
+
+// Logout
+
+func HandleLogout(w http.ResponseWriter, r *http.Request) error {
+	http.SetCookie(w, &http.Cookie{Name: "token", Value: ""})
+	return WriteJSON(w, http.StatusOK, Success{Message: "logged out"})
 }
