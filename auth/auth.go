@@ -3,6 +3,7 @@ package auth
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -28,10 +29,11 @@ func AuthAdmin(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func AuthRecep(next http.HandlerFunc) http.HandlerFunc {
+func AuthStaff(next http.HandlerFunc) http.HandlerFunc {
+	allowed := "admin,recep" // recep is admin
 	return func(w http.ResponseWriter, r *http.Request) {
 		claims, err := CheckJWT(r)
-		if err != nil || claims.Role != "recep" {
+		if err != nil || !strings.Contains(allowed, claims.Role) {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
