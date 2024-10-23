@@ -44,6 +44,6 @@ func (lc *LoginController) HandleLogin(w http.ResponseWriter, r *http.Request) e
 // Logout
 
 func HandleLogout(w http.ResponseWriter, r *http.Request) error {
-	http.SetCookie(w, &http.Cookie{Name: "token", Value: ""})
+	http.SetCookie(w, &http.Cookie{Name: "token", MaxAge: 0})
 	return WriteJSON(w, http.StatusOK, Success{Message: "logged out"})
 }
